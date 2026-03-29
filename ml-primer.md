@@ -902,6 +902,22 @@ All gating is some combination of: scaling, masking, projection, rotation, inter
 
 ## 🔧 Appendix: Diagnosing and Fixing Training Problems
 
+### Before You Train: The Sanity Checklist
+
+Most training problems are preventable. Check these before committing to a long training run:
+
+1. **Overfit one batch.** Take a single mini-batch and train until the loss reaches near zero. If the model can't memorize a handful of examples, something is broken — bad architecture, bad learning rate, bug in the data pipeline. Fix this before scaling up.
+
+2. **Inspect the data.** Visualize random samples. Check label distributions. Look for corrupted examples, mislabeled data, or unexpected formatting. A model trained on garbage produces garbage — no amount of architecture or hyperparameter tuning fixes bad data.
+
+3. **Check the baseline.** What does random guessing achieve? What does a simple model (logistic regression, nearest neighbor) achieve? If your neural network can't beat the simple baseline, the problem isn't capacity — it's something more fundamental.
+
+4. **Verify shapes and dimensions.** Print tensor shapes at each step of the pipeline. Off-by-one errors in dimensions, transposed matrices, and broadcasting bugs are silent — they don't crash, they just produce wrong results.
+
+5. **Start simple.** Train a small model first. If it works, scale up. If it doesn't, debug on the small model where iteration is fast. Don't debug at scale.
+
+<br>
+
 ### Reading the Loss Curve
 
 | Symptom | Likely Cause | Action |
@@ -911,15 +927,63 @@ All gating is some combination of: scaling, masking, projection, rotation, inter
 | Loss oscillates wildly | Learning rate too high | Reduce LR; use adaptive optimizer (Adam, AdaGrad) |
 | Training loss drops, validation diverges | Overfitting | Regularization, dropout, data augmentation, early stopping |
 | Loss is NaN or infinity | Exploding gradients | Gradient clipping, reduce LR, check weight initialization |
+| Loss drops very slowly | Learning rate too low | Increase LR; check for dead neurons (monitor activation statistics) |
+| Loss drops then suddenly spikes | LR too high for this phase of training | Use a LR schedule; reduce LR after warmup |
+
+<br>
+
+### Finding the Right Learning Rate
+
+The learning rate is the single most impactful hyperparameter. A practical technique for finding it:
+
+**Learning rate range test** (Smith, 2017): Start with a very small LR (e.g., 1e-7) and increase it exponentially over one epoch. Plot loss vs learning rate.
+
+- The loss will be flat at very low LRs (too small to make progress).
+- It will start dropping as the LR enters the useful range.
+- It will start oscillating or increasing when the LR is too high.
+- **Pick a LR from the steepest downward slope** — not the minimum, but the region where loss is dropping fastest. This is usually 1-10x below the point where loss starts rising.
+
+Common starting points if you don't do the range test:
+- **Adam:** 1e-3 to 3e-4
+- **SGD with momentum:** 1e-2 to 1e-1
+- **Fine-tuning a pretrained model:** 1e-5 to 1e-4 (much lower — you don't want to destroy the pretrained features)
+
+<br>
 
 ### The Toolkit
 
-**Learning rate** — the single most important hyperparameter. Schedules (high → low) almost always beat fixed rates. Warmup (low → high → low) helps when early gradients from random weights are unreliable.
+**Learning rate schedules** — almost always better than a fixed rate.
+- *Cosine annealing:* starts at max LR, follows a cosine curve down to near zero. Smooth, well-behaved.
+- *Step decay:* reduce LR by a factor (e.g., 10x) at fixed intervals. Simple, effective.
+- *Warmup + decay:* start low, ramp up over a few hundred steps, then decay. Helps when early gradients from random weights are unreliable. Standard for transformers.
+- *One-cycle:* ramp up to max then ramp down over one training cycle. Often reaches the same loss in fewer epochs.
+
+<br>
 
 **Momentum** (typically 0.9) — converts gradient descent from a ball rolling with friction into one rolling with inertia. Smooths noise, accelerates through consistent slopes, carries through flat regions.
 
 **Adam** — combines momentum with adaptive per-parameter learning rates. Default choice for most problems. Tradeoff: can converge to sharper minima than SGD with momentum, which can hurt generalization. Some practitioners use Adam early, then switch to SGD for final training.
 
-**Gradient clipping** — safety valve, not a fix. If you need aggressive clipping, something else is wrong.
+**Gradient clipping** — safety valve, not a fix. If you need aggressive clipping, something else is wrong. Standard max norm: 1.0 for transformers, 5.0 for RNNs.
 
 **Batch/layer normalization** — reshape the loss landscape itself. Smooth the surface, reduce severity of valleys and plateaus. Neither is universal: batch norm breaks with small batches and sequential data; layer norm assumes all features should have similar scale. Both trade representational freedom for trainability. Usually worth it. Not always.
+
+<br>
+
+### When to Stop Debugging the Model and Debug the Data
+
+The most common misdiagnosis in ML: assuming the model is wrong when the data is the problem.
+
+**Signs the data is the bottleneck, not the model:**
+- Multiple architectures all plateau at similar loss — the ceiling is in the data, not the model.
+- Performance is inconsistent across data subsets — some classes work well, others don't. Check those classes for labeling quality.
+- Increasing model size doesn't help — a bigger model with the same bad data memorizes the noise more aggressively, not less.
+- The model's errors look random rather than systematic — if there's no pattern to what it gets wrong, there's likely no pattern in the data for it to learn.
+
+**What to check:**
+- Label noise — what percentage of labels are incorrect? Even 5% noise creates a hard ceiling.
+- Class imbalance — rare classes may be effectively invisible during training.
+- Distribution shift — does the validation data come from the same distribution as the training data? Subtle differences (different time period, different source, different preprocessing) create unexplainable performance gaps.
+- Feature leakage — does the training data contain information that won't be available at inference? This produces inflated training metrics that don't transfer.
+
+> **Rule of thumb:** If you've tried three architectures and two optimizers and the loss curve looks the same, stop tuning the model. The answer is in the data.
