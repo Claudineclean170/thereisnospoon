@@ -2,9 +2,11 @@
 
 A high-signal reference built from first principles. Not a textbook — a mental model for engineers who want to reason about ML systems the way they reason about software systems.
 
-**How to read this.** Each section builds on the ones before it. The Neuron and Composition sections establish the geometric intuition that everything else depends on. Learning as Optimization requires the chain rule, which requires derivatives. The Combination Rule Family and Transformer sections assume you understand the neuron, composition, and optimization. Gates assume all of the above. If something doesn't make sense, check the earlier section it references.
+> **How to read this.** Each section builds on the ones before it. The Neuron and Composition sections establish the geometric intuition that everything else depends on. Learning as Optimization requires the chain rule, which requires derivatives. The Combination Rule Family and Transformer sections assume you understand the neuron, composition, and optimization. Gates assume all of the above. If something doesn't make sense, check the earlier section it references.
 
-### Notation
+<br>
+
+### 📋 Notation
 
 | Symbol | Meaning | Example |
 |--------|---------|---------|
@@ -26,7 +28,9 @@ A high-signal reference built from first principles. Not a textbook — a mental
 
 ---
 
-## The Neuron
+<br>
+
+## ⚡ The Neuron
 
 A neuron computes one number from a vector of inputs. That's it. Everything else in ML is arrangements of this.
 
@@ -96,11 +100,15 @@ Each activation function is a different policy for what to do with the side-and-
 
 ### The Polarizing Filter Analogy
 
-A neuron is a polarizing filter. Light has a polarization direction (the input). The filter has a preferred axis (the weight vector). Malus's Law says transmitted intensity is `I_in * cos²(θ)` — the component aligned with the filter passes through. Everything else is silently ignored. The weight vector defines what the neuron "cares about." The dot product extracts how much of the input aligns with that axis.
+> A neuron is a polarizing filter. Light has a polarization direction (the input). The filter has a preferred axis (the weight vector). Malus's Law says transmitted intensity is `I_in * cos²(θ)` — the component aligned with the filter passes through. Everything else is silently ignored. The weight vector defines what the neuron "cares about." The dot product extracts how much of the input aligns with that axis.
 
 ---
 
-## Composition: Depth, Width, and Paper Folding
+<br>
+
+## 📄 Composition: Depth, Width, and Paper Folding
+
+A single neuron makes one decision. What happens when you combine many of them — in a layer, and then stack layers?
 
 ### Width: More Cuts Per Layer
 
@@ -132,9 +140,13 @@ A single wide layer can approximate any function (universal approximation theore
 
 **Sweet spot**: moderate depth with moderate width. Hierarchical problems (images, language) reward depth. Flat discrimination problems (tabular data) often do better with width.
 
+> **Key insight:** Width gives you resolution (finer partitions). Depth gives you complexity (curved, nested boundaries). They do different things, and the cost of getting the balance wrong is different in each direction.
+
 ---
 
-## Learning as Optimization
+<br>
+
+## 📉 Learning as Optimization
 
 The network starts with random weights. Its output is wrong. Learning is the process of adjusting every weight so the output gets less wrong. To understand how, you need derivatives and the chain rule. If you're already comfortable with calculus, skip to [The Chain Rule](#the-chain-rule).
 
@@ -284,7 +296,9 @@ Every possible configuration of weights maps to a loss value. This surface has a
 
 ---
 
-## Generalization
+<br>
+
+## 🎯 Generalization
 
 ### Why It Works (And Shouldn't)
 
@@ -308,9 +322,15 @@ Not a checklist of techniques. A single principle: **constrain the search space 
 
 **Early stopping** — stop when validation loss starts rising. The network learned the pattern and is now fitting noise.
 
+> **Key insight:** Regularization isn't a bag of tricks. It's one principle — constrain the space of solutions to prefer the ones that generalize — applied through different mechanisms depending on the failure mode.
+
 ---
 
-## Representation: What Networks Actually Store
+<br>
+
+## 🧠 Representation: What Networks Actually Store
+
+We've covered what networks compute. Now: what do they *know*, and where is that knowledge?
 
 ### Features as Directions
 
@@ -350,7 +370,9 @@ GPU floating point operations don't guarantee execution order — identical inpu
 
 ---
 
-## The Combination Rule Family
+<br>
+
+## 🔀 The Combination Rule Family
 
 Every architecture does three things: combine inputs according to some rule, apply a nonlinearity, repeat. The only difference between architectures is step 1 — the combination rule. That's where the inductive bias lives.
 
@@ -358,26 +380,44 @@ Every architecture does three things: combine inputs according to some rule, app
 
 **Dense** — every input connects to every output. No assumption. Maximum flexibility, maximum parameters. The standard multi-layer perceptron (MLP) is stacked dense layers.
 
+<br>
+
 **Convolution** — small sliding dot product with shared weights. Assumes locality and translation invariance. Far fewer parameters. Hierarchical feature composition: edges → textures → objects across layers. Pooling, stride, and dilation control how the receptive field expands. Breaks down when locality is wrong, when translation invariance is wrong, or when data isn't on a grid.
 - *Landmark models:* LeNet (1998, handwritten digits), AlexNet (2012, ImageNet breakthrough), ResNet (2015, residual connections enabled 100+ layers), U-Net (2015, image segmentation, backbone of diffusion models).
+
+<br>
 
 **Recurrence** — sequential state-carrying. `h_t = f(W_h · h_(t-1) + W_x · x_t + b)`. A fixed-size vector summarizes all history. Each step is a lossy relay — the entire upstream history must fit in one vector. Eigenvalues of W_h determine information decay rates per direction (eigenvalue < 1: information decays; > 1: it explodes; = 1: preserved). Vanilla RNNs fail beyond ~10-20 steps. LSTMs add an additive cell state (conveyor belt) with learned gates (forget, input, output) — same trick as residual connections. GRUs simplify to one update gate. Attention replaced recurrence for parallelism, no compression bottleneck, and shorter gradient paths. Recurrence still wins for streaming, constant memory, and strict causality.
 - *Landmark models:* LSTM (1997, Hochreiter & Schmidhuber), GRU (2014, Cho et al.), seq2seq (2014, encoder-decoder for translation — where attention was invented as a patch for the compression bottleneck).
 
+<br>
+
 **Attention** — dynamic, content-dependent combination. Three projections per element: query (what am I looking for?), key (what do I contain?), value (what do I provide?). Dot product of query against all keys determines relevance. Softmax normalizes to a distribution. Output is weighted sum of values. Q/K/V are the complete decomposition of a routing operation — no additional projections have proven necessary.
 - *Landmark models:* Transformer (2017, "Attention Is All You Need"), BERT (2018, bidirectional encoder), GPT series (2018-present, autoregressive decoder), Vision Transformer/ViT (2020, patches + attention for images).
+
+<br>
 
 **Graph operations** — message passing over explicit topology. Nodes collect from neighbors, aggregate, update. Convolution generalized to irregular structure. Excels when relationships are known (molecules, physics). Oversmoothing limits depth — too many rounds and all nodes converge.
 - *Landmark models:* GCN (2017, Kipf & Welling), GAT (2018, attention-weighted edges), SchNet (2017, molecular property prediction), AlphaFold 2 (2020, protein structure with graph + attention).
 
+<br>
+
 **State-space models** — continuous-time recurrence from control theory. `dx/dt = Ax + Bu, y = Cx + Du`. Can be computed as recurrence (O(1) memory) or convolution (parallel training). HiPPO provides mathematically optimal history compression. Mamba added input-dependent gating for content-sensitive processing. Bridges recurrence and convolution.
 - *Landmark models:* S4 (2021, first efficient SSM), Mamba (2023, selective state spaces), Jamba (2024, SSM-attention hybrid).
 
+<br>
+
 **Sparse/structured matrices** — constrained connectivity for efficiency. Block-diagonal (independent groups), low-rank (bottleneck factorization), butterfly (hierarchical pairwise mixing in O(N log N)). Sometimes matches data structure, sometimes purely a compute approximation.
+
+> **Key insight:** When you choose an architecture, you're choosing a combination rule — which inputs should influence which outputs, and how much. That's the single design decision that matters most. Everything else (nonlinearity, gradient flow, loss, training) is shared machinery.
 
 ---
 
-## The Transformer
+<br>
+
+## 🤖 The Transformer
+
+The dominant architecture. Understanding its internals is essential for reasoning about modern ML systems.
 
 A transformer block: self-attention (route information between elements), feed-forward network (apply stored knowledge per element), both wrapped in residual connections and layer normalization. Repeated N times.
 
@@ -419,7 +459,9 @@ Decoder-only: single decoder with causal masking. Input and output are the same 
 
 ---
 
-## Encoding
+<br>
+
+## 🔤 Encoding
 
 The encoder converts raw data into the vector format the downstream architecture operates on. It determines the ceiling — the model can only learn from what the encoder preserves.
 
@@ -437,7 +479,11 @@ Three decisions: what is an element (granularity), what does each element's vect
 
 ---
 
-## Learning Rules
+<br>
+
+## 📐 Learning Rules
+
+Backprop dominates, but it's not the only way networks learn. Understanding the alternatives clarifies what backprop actually provides — and what it costs.
 
 **Backpropagation** — exact global gradient via chain rule. Dominant because nothing else matches its efficiency at scale. Downsides: requires differentiability (can't backprop through discrete decisions), requires storing all activations (memory scales with depth), backward pass as expensive as forward, sequential layer-by-layer backward (synchronization bottleneck), catastrophic forgetting (gradient only sees current batch), no learning at inference time, gradient pathology scales with depth.
 
@@ -453,7 +499,9 @@ Three decisions: what is an element (granularity), what does each element's vect
 
 ---
 
-## Frameworks
+<br>
+
+## 🏋️ Frameworks
 
 The training objective — what the model optimizes for. Independent of architecture and learning rule.
 
@@ -476,7 +524,11 @@ The training objective — what the model optimizes for. Independent of architec
 
 ---
 
-## Topology for the Problem
+<br>
+
+## 🗺️ Topology for the Problem
+
+You know the building blocks. Now: given a problem, how do you choose?
 
 Architecture choice is driven by data structure, task requirements, data quantity, and compute constraints.
 
@@ -498,7 +550,11 @@ Architecture choice is driven by data structure, task requirements, data quantit
 
 ---
 
-## Gates as Control Systems
+<br>
+
+## 🚦 Gates as Control Systems
+
+Gates are how networks control their own information flow. Every mechanism we've covered — attention, LSTM gating, routing, residual connections — is a gate. This section makes the pattern explicit.
 
 ### What a Gate Is
 
@@ -567,11 +623,15 @@ These compose into arbitrary soft logic. Everything is continuous — no hard 0s
 
 ![Geometric gating operations: projection (shadow onto subspace), masking (zero specific axes), rotation (change direction, keep magnitude), interpolation (blend between representations).](figures/08_gating_operations.png)
 
-All gating is some combination of: scaling, masking, projection, rotation, interpolation. The design skill is matching the geometric operation to the information flow requirement — identifying what functional behavior you need, then choosing the mathematical shape that provides it.
+All gating is some combination of: scaling, masking, projection, rotation, interpolation.
+
+> **Key insight:** The design skill is matching the geometric operation to the information flow requirement — identifying what functional behavior you need, then choosing the mathematical shape that provides it. This is the same pattern throughout ML: shape determines purpose.
 
 ---
 
-## Appendix: Diagnosing and Fixing Training Problems
+<br>
+
+## 🔧 Appendix: Diagnosing and Fixing Training Problems
 
 ### Reading the Loss Curve
 
